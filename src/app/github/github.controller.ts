@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common'
+import { Body, Controller, Post } from '@nestjs/common'
 import { GithubService } from './github.service'
+import { LoginDataDto } from './dto/login-data.dto'
 
 @Controller({
   path: 'github',
@@ -8,8 +9,23 @@ import { GithubService } from './github.service'
 export class GithubController {
   constructor(private readonly githubService: GithubService) {}
 
-  @Get()
-  getHello(): string {
-    return this.githubService.getHello()
+  // TODO: Crear un middleware para validar los errores de la petición
+  @Post('login')
+  async loginUser(@Body() data: LoginDataDto) {
+    const { code } = data
+
+    const user = await this.githubService.loginUser(code)
+
+    if (user.error) {
+      return {
+        message: 'Failed to login user',
+        data: user,
+      }
+    }
+
+    return {
+      message: 'User logged in',
+      data: user,
+    }
   }
 }
