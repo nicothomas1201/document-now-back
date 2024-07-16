@@ -1,11 +1,21 @@
 import { IsString, IsNotEmpty } from 'class-validator'
 
+// export class GenerateDocumentDto {
+//   @IsString()
+//   @IsNotEmpty()
+//   code: string
+
+//   @IsString()
+//   @IsNotEmpty()
+//   lang: string
+// }
+
 export class GenerateDocumentDto {
   @IsString()
   @IsNotEmpty()
-  code: string
+  githubToken: string
 
   @IsString()
   @IsNotEmpty()
-  lang: string
+  repoName: string
 }

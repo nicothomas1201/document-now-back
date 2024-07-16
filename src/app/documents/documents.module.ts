@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common'
 import { DocumentsController } from './documents.controller'
 import { DocumentsService } from './documents.service'
+import { GithubModule, GithubService } from '../github'
 
 @Module({
-  imports: [],
+  imports: [GithubModule],
   controllers: [DocumentsController],
-  providers: [DocumentsService],
+  providers: [DocumentsService, GithubService],
 })
 export class DocumentsModule {}

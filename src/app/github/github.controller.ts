@@ -1,4 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Post,
+  Headers,
+  HttpStatus,
+  HttpException,
+  Query,
+  Get,
+} from '@nestjs/common'
 import { GithubService } from './github.service'
 import { LoginDataDto } from './dto/login-data.dto'
 
@@ -9,23 +18,59 @@ import { LoginDataDto } from './dto/login-data.dto'
 export class GithubController {
   constructor(private readonly githubService: GithubService) {}
 
-  // TODO: Crear un middleware para validar los errores de la petición
   @Post('login')
   async loginUser(@Body() data: LoginDataDto) {
-    const { code } = data
+    try {
+      const { code } = data
 
-    const user = await this.githubService.loginUser(code)
+      const user = await this.githubService.loginUser(code)
 
-    if (user.error) {
+      if (user.error) {
+        return {
+          message: 'Failed to login user',
+          data: user,
+        }
+      }
+
       return {
-        message: 'Failed to login user',
+        message: 'User logged in',
         data: user,
       }
+    } catch (err) {
+      console.log(err)
+      throw new HttpException(
+        'Failed to login user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
+  }
 
-    return {
-      message: 'User logged in',
-      data: user,
+  // TODO: Se debe hacer desde el front para evitar una llamada de api inecesaria
+  @Get('user')
+  async getUserRepos(@Headers('authorization') token: string) {
+    try {
+      return this.githubService.getRepositories(token)
+    } catch (err) {
+      throw new HttpException(
+        'Failed to get user repos',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
+  }
+
+  // me va a enviar un post con la ruta del repositorio
+  @Get('repo-content')
+  async(
+    @Headers('authorization') token: string,
+    @Query('url') repoUrl: string,
+  ) {
+    try {
+      return this.githubService.getRepoContent(token, repoUrl, '')
+    } catch (err) {
+      throw new HttpException(
+        'Failed to get repo content',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
   }
 }

@@ -5,5 +5,6 @@ export const config = () => ({
     clientId: process.env.GITHUB_CLIENT_ID,
     appId: process.env.GITHUB_APP_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    token: process.env.GITHUB_TOKEN || '',
   },
 })
