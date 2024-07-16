@@ -70,10 +70,3 @@ export class FilesDto {
   @Type(() => RepositoryContent)
   files: RepositoryContent[]
 }
-
-export interface File {
-  path: string
-  content: string
-  name: string
-  type: string
-}
