@@ -12,7 +12,7 @@ export class GithubService {
     private readonly httpService: HttpService,
   ) {}
 
-  // Por ahora es neceario pero esto se hara en el frontend
+  // Cuando obtengamos el token de acceso debemos crear un jwt token para validar si el usuario tiene permisos
   async loginUser(code: string) {
     if (code === '') throw new Error('Code is required')
 
@@ -20,7 +20,7 @@ export class GithubService {
     const clientSecret = this.configService.get<string>('github.clientSecret')
 
     const res = await fetch(
-      `'https://github.com/login/oauth/access_token'?client_id=${clientId}&client_secret=${clientSecret}&code=${code}`,
+      `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientSecret}&code=${code}`,
       {
         method: 'POST',
         headers: {
@@ -39,20 +39,6 @@ export class GithubService {
       this.httpService.get('/user/repos', {
         headers: {
           Accept: 'application/json',
-          Authorization: `${token}`,
-        },
-      }),
-    )
-
-    return data
-  }
-
-  // https://api.github.com/repos/nicothomas1201/api-laravel
-  async getRepoContent(token: string, repoUrl: string, path: string = '') {
-    const { data } = await firstValueFrom(
-      this.httpService.get(`${repoUrl}/contents/${path}`, {
-        headers: {
-          Accept: 'application',
           Authorization: `${token}`,
         },
       }),

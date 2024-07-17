@@ -16,7 +16,6 @@ export class DocumentsService {
     private readonly filesService: FilesService,
   ) {}
 
-  // Se envia la url del repositorio y el token de autenticación, y obtenemos el contenido del repositorio
   async generateDocument(token: string, repoName: string) {
     try {
       const data = await this.githubService.downloadProject(token, repoName)
@@ -51,8 +50,8 @@ export class DocumentsService {
         return `${acc}\n\n ${file.name}\n ${file.content}`
       }, '')
 
-      // const text = await this.useAi(code, 'javascript')
-      const text = code
+      const text = await this.useAi(code, 'javascript')
+      // const text = code
 
       return {
         text,

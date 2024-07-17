@@ -5,7 +5,6 @@ import {
   Headers,
   HttpStatus,
   HttpException,
-  Query,
   Get,
 } from '@nestjs/common'
 import { GithubService } from './github.service'
@@ -37,7 +36,6 @@ export class GithubController {
         data: user,
       }
     } catch (err) {
-      console.log(err)
       throw new HttpException(
         'Failed to login user',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -46,29 +44,13 @@ export class GithubController {
   }
 
   // TODO: Se debe hacer desde el front para evitar una llamada de api inecesaria
-  @Get('user')
+  @Get('repos')
   async getUserRepos(@Headers('authorization') token: string) {
     try {
       return this.githubService.getRepositories(token)
     } catch (err) {
       throw new HttpException(
         'Failed to get user repos',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
-    }
-  }
-
-  // me va a enviar un post con la ruta del repositorio
-  @Get('repo-content')
-  async(
-    @Headers('authorization') token: string,
-    @Query('url') repoUrl: string,
-  ) {
-    try {
-      return this.githubService.getRepoContent(token, repoUrl, '')
-    } catch (err) {
-      throw new HttpException(
-        'Failed to get repo content',
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
