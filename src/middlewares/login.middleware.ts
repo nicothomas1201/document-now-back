@@ -18,9 +18,18 @@ export class LoginMiddleware implements NestMiddleware {
     this.configService.set('REDIRECT_URL', redirect)
 
     if (redirect && isValidURL(String(redirect))) {
-      next()
-    } else {
-      throw new HttpException('Redirect is required', HttpStatus.BAD_REQUEST)
+      return next()
+    }
+
+    if (!redirect || redirect === '') {
+      throw new HttpException(
+        'Redirect URL is required',
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    if (!isValidURL(String(redirect))) {
+      throw new HttpException('Invalid Redirect URL', HttpStatus.BAD_REQUEST)
     }
   }
 }

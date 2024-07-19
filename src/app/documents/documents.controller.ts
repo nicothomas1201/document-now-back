@@ -34,7 +34,7 @@ export class DocumentsController {
     }
   }
 
-  @Post('generate-public')
+  @Post('generate/preview')
   async generatePublicDocument(@Body() data: GeneratePublicDocumentDto) {
     try {
       return await this.documentsService.generatePublicDocument(data)
