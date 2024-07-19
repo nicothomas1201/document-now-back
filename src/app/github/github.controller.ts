@@ -1,14 +1,13 @@
 import {
-  Body,
   Controller,
-  Post,
-  Headers,
   HttpStatus,
   HttpException,
   Get,
+  UseGuards,
 } from '@nestjs/common'
 import { GithubService } from './github.service'
-import { LoginDataDto } from './dto/login-data.dto'
+import { JwtGuard } from '@/guards'
+import { User } from '@/decorators'
 
 @Controller({
   path: 'github',
@@ -17,40 +16,31 @@ import { LoginDataDto } from './dto/login-data.dto'
 export class GithubController {
   constructor(private readonly githubService: GithubService) {}
 
-  @Post('login')
-  async loginUser(@Body() data: LoginDataDto) {
+  @Get('repos')
+  @UseGuards(JwtGuard)
+  async getUserRepos(@User() user: UserDecorator) {
     try {
-      const { code } = data
-
-      const user = await this.githubService.loginUser(code)
-
-      if (user.error) {
-        return {
-          message: 'Failed to login user',
-          data: user,
-        }
-      }
-
-      return {
-        message: 'User logged in',
-        data: user,
-      }
+      const data = await this.githubService.getRepositories(user.github_token)
+      console.log(data.length)
     } catch (err) {
+      console.log(err)
       throw new HttpException(
-        'Failed to login user',
+        'Failed to get user repos',
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
   }
 
-  // TODO: Se debe hacer desde el front para evitar una llamada de api inecesaria
-  @Get('repos')
-  async getUserRepos(@Headers('authorization') token: string) {
+  @Get('user')
+  @UseGuards(JwtGuard)
+  async getUser(@User() user: UserDecorator) {
     try {
-      return this.githubService.getRepositories(token)
+      const data = await this.githubService.getUser(user.github_token)
+      return data
     } catch (err) {
+      console.log(err)
       throw new HttpException(
-        'Failed to get user repos',
+        'Failed to get user',
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }

@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   HttpException,
-  HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common'
 import { DocumentsService } from './documents.service'
-import { GenerateDocumentDto } from './dto'
+import { GenerateDocumentDto, GeneratePublicDocumentDto } from './dto'
+import { User } from '@/decorators'
+import { JwtGuard } from '@/guards'
 
 @Controller({
   path: 'docs',
@@ -16,17 +18,28 @@ export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post('generate')
+  @UseGuards(JwtGuard)
   async generateDocument(
-    @Body() { githubToken, repoName }: GenerateDocumentDto,
+    @Body() { repoName }: GenerateDocumentDto,
+    @User() user: UserDecorator,
   ) {
     try {
-      return await this.documentsService.generateDocument(githubToken, repoName)
-    } catch (err) {
-      console.log(err)
-      throw new HttpException(
-        'Failed to generate document',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      return await this.documentsService.generateDocument(
+        user.github_token,
+        repoName,
+        user.username,
       )
+    } catch (err) {
+      throw new HttpException(err.message, err.response.status)
+    }
+  }
+
+  @Post('generate-public')
+  async generatePublicDocument(@Body() data: GeneratePublicDocumentDto) {
+    try {
+      return await this.documentsService.generatePublicDocument(data)
+    } catch (err) {
+      throw new HttpException(err.message, err.response.status)
     }
   }
 }

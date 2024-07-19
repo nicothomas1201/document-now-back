@@ -1,45 +1,18 @@
 import { HttpService } from '@nestjs/axios'
 import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { firstValueFrom } from 'rxjs'
 import { RepositoryContent } from '../documents/dto'
 
 @Injectable()
 export class GithubService {
-  private username = 'nicothomas1201'
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly httpService: HttpService,
-  ) {}
-
-  // Cuando obtengamos el token de acceso debemos crear un jwt token para validar si el usuario tiene permisos
-  async loginUser(code: string) {
-    if (code === '') throw new Error('Code is required')
-
-    const clientId = this.configService.get<string>('github.clientId')
-    const clientSecret = this.configService.get<string>('github.clientSecret')
-
-    const res = await fetch(
-      `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientSecret}&code=${code}`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-        },
-      },
-    )
-
-    const data = await res.json()
-
-    return data
-  }
+  constructor(private readonly httpService: HttpService) {}
 
   async getRepositories(token: string) {
     const { data } = await firstValueFrom(
       this.httpService.get('/user/repos', {
         headers: {
           Accept: 'application/json',
-          Authorization: `${token}`,
+          Authorization: `Bearer ${token}`,
         },
       }),
     )
@@ -50,9 +23,10 @@ export class GithubService {
   async getRepoInfo(
     token: string,
     repoName: string,
+    username: string,
   ): Promise<RepositoryContent> {
     const { data }: { data: RepositoryContent } = await firstValueFrom(
-      this.httpService.get(`/repos/${this.username}/${repoName}`, {
+      this.httpService.get(`/repos/${username}/${repoName}`, {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${token}`,
@@ -62,14 +36,14 @@ export class GithubService {
 
     return data
   }
-
-  async downloadProject(token: string, repoName: string) {
-    const { data } = await firstValueFrom(
-      this.httpService.get(`/repos/${this.username}/${repoName}/zipball/main`, {
-        responseType: 'arraybuffer',
+  async getPublicRepoInfo(
+    repoName: string,
+    username: string,
+  ): Promise<RepositoryContent> {
+    const { data }: { data: RepositoryContent } = await firstValueFrom(
+      this.httpService.get(`/repos/${username}/${repoName}`, {
         headers: {
-          Accept: 'application/vnd.github+json',
-          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
       }),
     )
@@ -77,26 +51,35 @@ export class GithubService {
     return data
   }
 
-  // private async getUserInfo(token: string) {
-  //   const url = `${this.baseUrl}/user`
+  async downloadProject(token: string, repoName: string, username: string) {
+    const headers = {
+      Accept: 'application/json',
+    }
 
-  //   try {
-  //     const res = await fetch(url, {
-  //       method: 'GET',
-  //       headers: {
-  //         Authorization: `${token}`,
-  //       },
-  //     })
+    if (typeof token === 'string' && token !== '') {
+      headers['Authorization'] = `Bearer ${token}`
+    }
 
-  //     const data = await res.json()
+    const { data } = await firstValueFrom(
+      this.httpService.get(`/repos/${username}/${repoName}/zipball/main`, {
+        responseType: 'arraybuffer',
+        headers,
+      }),
+    )
 
-  //     return data
-  //   } catch (err) {
-  //     console.log(err)
-  //     throw new HttpException(
-  //       'Failed to get user repos',
-  //       HttpStatus.INTERNAL_SERVER_ERROR,
-  //     )
-  //   }
-  // }
+    return data
+  }
+
+  async getUser(token: string) {
+    const { data } = await firstValueFrom(
+      this.httpService.get('/user', {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    )
+
+    return data
+  }
 }
