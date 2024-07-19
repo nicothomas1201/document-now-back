@@ -53,7 +53,7 @@ export class GithubService {
 
   async downloadProject(token: string, repoName: string, username: string) {
     const headers = {
-      Accept: 'application/json',
+      Accept: 'application/vnd.github+json',
     }
 
     if (typeof token === 'string' && token !== '') {

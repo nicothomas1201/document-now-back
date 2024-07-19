@@ -19,7 +19,7 @@ export class DocumentsService {
     private readonly filesService: FilesService,
   ) {}
 
-  // TODO: Revisar porque no al parecer no tengo permisos para revisar proyectos privados
+  // TODO: Revisar porque hay un error si el repo es muy grande
   async generateDocument(token: string, repoName: string, username: string) {
     const data = await this.githubService.downloadProject(
       token,
