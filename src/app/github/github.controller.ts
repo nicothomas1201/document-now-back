@@ -20,8 +20,7 @@ export class GithubController {
   @UseGuards(JwtGuard)
   async getUserRepos(@User() user: UserDecorator) {
     try {
-      const data = await this.githubService.getRepositories(user.github_token)
-      console.log(data.length)
+      return this.githubService.getRepositories(user.github_token)
     } catch (err) {
       console.log(err)
       throw new HttpException(
