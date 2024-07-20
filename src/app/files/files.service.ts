@@ -6,6 +6,8 @@ import { File } from './dto'
 
 @Injectable()
 export class FilesService {
+  private reposTempPath = path.join(process.cwd(), 'src', 'temps', 'repos')
+
   async extractAndDeleteZip(zipPath: string, extractPath: string) {
     return new Promise((resolve, reject) => {
       fs.createReadStream(zipPath)
@@ -59,5 +61,13 @@ export class FilesService {
     await readDir(completePath)
     await fs.promises.rm(completePath, { recursive: true, force: true })
     return result
+  }
+
+  getZipPath(repoName: string): string {
+    return path.join(this.reposTempPath, `${repoName}.zip`)
+  }
+
+  getExtractPath(): string {
+    return path.join(this.reposTempPath, 'extracted')
   }
 }

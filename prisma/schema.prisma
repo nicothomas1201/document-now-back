@@ -14,11 +14,21 @@ datasource db {
 }
 
 model User {
-  id Int @default(autoincrement()) @id
-  username String @unique
-  email String?
-  name String?
-  github_token String
-  github_id Int
-  access_token String
+  id            Int             @id @default(autoincrement())
+  username      String          @unique
+  email         String?
+  name          String?
+  github_token  String
+  github_id     Int
+  access_token  String
+  documentation Documentation[]
+}
+
+model Documentation {
+  id      Int    @id @default(autoincrement())
+  title   String
+  content String
+  repoName String @unique
+  user    User?  @relation(fields: [userId], references: [id])
+  userId  Int
 }

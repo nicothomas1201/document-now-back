@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
+  HttpStatus,
   Post,
   UseGuards,
 } from '@nestjs/common'
@@ -16,6 +18,23 @@ import { JwtGuard } from '@/guards'
 })
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
+
+  @Get('user')
+  @UseGuards(JwtGuard)
+  async getDocuments(@User() user: UserDecorator) {
+    try {
+      return await this.documentsService.getUserDocsWithRepos(
+        user.github_token,
+        user.username,
+      )
+    } catch (err) {
+      console.log(err)
+      throw new HttpException(
+        'Failed in get user docs with repos',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
+  }
 
   @Post('generate')
   @UseGuards(JwtGuard)
