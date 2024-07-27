@@ -4,6 +4,7 @@ import {
   HttpException,
   Get,
   UseGuards,
+  Query,
 } from '@nestjs/common'
 import { GithubService } from './github.service'
 import { JwtGuard } from '@/guards'
@@ -18,9 +19,21 @@ export class GithubController {
 
   @Get('repos')
   @UseGuards(JwtGuard)
-  async getUserRepos(@User() user: UserDecorator) {
+  async getUserRepos(
+    @User() user: UserDecorator,
+    @Query()
+    query: {
+      page: string
+      per_page: string
+    },
+  ) {
     try {
-      return this.githubService.getRepositories(user.github_token)
+      const { page, per_page } = query
+      return this.githubService.getRepositories(
+        user.github_token,
+        Number(page),
+        Number(per_page),
+      )
     } catch (err) {
       console.log(err)
       throw new HttpException(

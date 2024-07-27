@@ -7,9 +7,15 @@ import { config } from '../config'
 import { DocumentsModule } from './documents'
 import { AuthModule } from './auth'
 import { LoginMiddleware } from '@/middlewares'
+import { ServeStaticModule } from '@nestjs/serve-static'
+import * as path from 'path'
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', 'storage'),
+      serveRoot: '/docs',
+    }),
     AuthModule,
     GithubModule,
     DocumentsModule,

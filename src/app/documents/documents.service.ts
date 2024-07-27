@@ -5,15 +5,10 @@ import { ConfigService } from '@nestjs/config'
 import { GithubService } from '../github'
 import * as fs from 'fs'
 import { FilesService } from '../files'
-import { filterTypesFiles } from '@/utils'
-import { GeneratePublicDocumentDto } from './dto'
+import { prompt } from '@/utils'
+import { DocLanguage } from './dto'
 import { PrismaService } from '@/services'
-import { RepositoryContent } from '../github/dto/repositories.dto'
 
-enum STATUS_PROMISE {
-  correct = 'fulfilled',
-  error = 'rejected',
-}
 @Injectable()
 export class DocumentsService {
   constructor(
@@ -30,10 +25,11 @@ export class DocumentsService {
     username: string,
     repoName: string,
   ) {
+    const contetCompress = await this.filesService.compressContent(content)
     return await this.prisma.documentation.create({
       data: {
         title,
-        content,
+        content: contetCompress as string,
         user: {
           connect: {
             username,
@@ -59,65 +55,121 @@ export class DocumentsService {
           username,
         },
       },
+      select: {
+        id: true,
+        title: true,
+        repoName: true,
+        content: false,
+        userId: true,
+      },
     })
   }
 
-  async getUserDocsWithRepos(token: string, username: string) {
-    const docs = await this.getUserDocuments(username)
-    const reposPromises = docs.map(
-      (doc) =>
-        new Promise(async (resolve, reject) => {
-          try {
-            const repoInfo = await this.githubService.getRepoInfo(
-              token,
-              doc.repoName,
-              username,
-            )
-
-            resolve({
-              repoInfo,
-            })
-          } catch (err) {
-            reject(err)
-          }
-        }),
-    )
-
-    const response = await Promise.allSettled(reposPromises)
-
-    const correctRepos = response
-      .filter((res) => res.status === STATUS_PROMISE.correct)
-      .map((res) => {
-        const value = res.value as { repoInfo: RepositoryContent }
-        return value.repoInfo
-      })
-
-    const errorRepos = response
-      .filter((repo) => repo.status === STATUS_PROMISE.error)
-      .map((repo) => repo.reason)
-
-    // TODO: Hacer algo con los errorRepos
-    console.log(errorRepos)
-
-    return docs.map((doc) => ({
-      ...doc,
-      repoInfo: correctRepos.find(
-        (repo) => repo.name === doc.repoName,
-      ) as RepositoryContent,
-    }))
+  async getUserDocById(id: number) {
+    return await this.prisma.documentation.findUnique({
+      where: {
+        id,
+      },
+    })
   }
 
-  // generate
+  // async getUserDocsWithRepos(token: string, username: string) {
+  //   const docs = await this.getUserDocuments(username)
 
-  // TODO: hay que convertir el content en un base64
-  async generateDocument(token: string, repoName: string, username: string) {
+  //   const reposPromises = docs.map(
+  //     (doc) =>
+  //       new Promise(async (resolve, reject) => {
+  //         try {
+  //           const repoInfo = await this.githubService.getRepoInfo(
+  //             token,
+  //             doc.repoName,
+  //             username,
+  //           )
+
+  //           resolve({
+  //             repoInfo,
+  //           })
+  //         } catch (err) {
+  //           reject(err)
+  //         }
+  //       }),
+  //   )
+
+  //   const response = await Promise.allSettled(reposPromises)
+
+  //   const correctRepos = response
+  //     .filter((res) => res.status === STATUS_PROMISE.correct)
+  //     .map((res) => {
+  //       const value = res.value as { repoInfo: RepositoryContent }
+  //       return value.repoInfo
+  //     })
+
+  //   const errorRepos = response
+  //     .filter((repo) => repo.status === STATUS_PROMISE.error)
+  //     .map((repo) => repo.reason)
+
+  //   // TODO: Hacer algo con los errorRepos
+  //   console.log(errorRepos)
+
+  //   return docs.map((doc) => ({
+  //     ...doc,
+  //     repoInfo: correctRepos.find(
+  //       (repo) => repo.name === doc.repoName,
+  //     ) as RepositoryContent,
+  //   }))
+  // }
+
+  async getDocAndCreateMd(reponame: string, username: string) {
+    const doc = await this.findDocumentByRepoName(reponame)
+    const path = await this.filesService.createMarkdownFile(
+      this.filesService.decompressContent(doc.content),
+      username,
+      reponame,
+    )
+
+    return path
+  }
+
+  async isReactProject(
+    token: string,
+    username: string,
+    reponame: string,
+  ): Promise<boolean> {
+    const packageJson = await this.githubService.getRepoContent(
+      token,
+      username,
+      reponame,
+      'package.json',
+    )
+
+    return packageJson['dependencies']['react'] !== undefined
+  }
+
+  async generateDocument(
+    token: string,
+    username: string,
+    repoName: string,
+    descritpion: string,
+    title: string,
+    language: DocLanguage,
+    preview: boolean = false,
+  ) {
+    const isReact = await this.isReactProject(token, username, repoName)
+
+    if (!isReact) {
+      return {
+        message: 'El proyecto no esta construido con react',
+      }
+    }
+
     const data = await this.githubService.downloadProject(
       token,
       repoName,
       username,
+      preview,
     )
 
-    const zipPath = this.filesService.getZipPath(`${repoName}.zip`)
+    const zipPath = this.filesService.getZipPath(repoName)
 
     // escribimos el zip
     fs.writeFileSync(zipPath, data)
@@ -127,82 +179,52 @@ export class DocumentsService {
 
     await this.filesService.extractAndDeleteZip(zipPath, extractPath)
 
-    const files = await this.filesService.readFiles(extractPath)
+    const techStack = []
+    const files = await this.filesService.readFiles(extractPath, (content) => {
+      const { dependencies, devDependencies } = JSON.parse(content)
+      techStack.push(
+        ...Object.keys(dependencies),
+        ...Object.keys(devDependencies),
+      )
+    })
 
-    const filteredFiles = filterTypesFiles(files).map((file) => ({
+    const filesMaped = files.map((file) => ({
       name: file.name,
       path: file.path,
       content: file.content,
     }))
 
-    const code = filteredFiles.reduce((acc, file) => {
-      return `${acc}\n\n ${file.name}\n ${file.content}`
+    const code = filesMaped.reduce((acc, file) => {
+      return `${acc}\n\n File: ${file.name}\n ${file.content}`
     }, '')
 
-    // Lo que se va a codificar va a ser la respuesta al modelo de mistral, por ahora vamos a guardar y mostar el codigo
-    const encodedContent = Buffer.from(code).toString('base64')
+    const dataPrompt = prompt(repoName, code, techStack, language, descritpion)
 
-    await this.createUserDocument(
-      `Docs of ${repoName}`,
-      encodedContent,
-      username,
-      repoName,
-    )
+    const documentation = await this.useAi(dataPrompt)
 
-    // const text = await this.useAi(code, 'javascript')
-    const text = encodedContent
-
-    return {
-      text,
+    if (!preview) {
+      return await this.createUserDocument(
+        title,
+        documentation,
+        username,
+        repoName,
+      )
     }
   }
 
-  async generatePublicDocument({
-    repoName,
-    username,
-  }: GeneratePublicDocumentDto) {
-    const data = await this.githubService.downloadProject(
-      '',
-      repoName,
-      username,
-    )
+  async deleteDocumentByRepoName(repoName: string, username: string) {
+    await this.filesService.deleteMarkdownFile(username, repoName)
 
-    const zipPath = this.filesService.getZipPath(`${repoName}.zip`)
+    const data = await this.prisma.documentation.delete({
+      where: {
+        repoName,
+      },
+    })
 
-    // escribimos el zip
-    fs.writeFileSync(zipPath, data)
-
-    // ruta donde se extraerá el zip
-    const extractPath = this.filesService.getExtractPath()
-
-    await this.filesService.extractAndDeleteZip(zipPath, extractPath)
-
-    const files = await this.filesService.readFiles(extractPath)
-    const filteredFiles = filterTypesFiles(files).map((file) => ({
-      name: file.name,
-      path: file.path,
-      content: file.content,
-    }))
-
-    const code = filteredFiles.reduce((acc, file) => {
-      return `${acc}\n\n ${file.name}\n ${file.content}`
-    }, '')
-
-    // const text = await this.useAi(code, 'javascript')
-    const text = code
-
-    return {
-      text,
-    }
+    return data
   }
 
-  private async useAi(code: string, lang: string): Promise<string> {
-    const prompt = `
-      El siguiente es un fragmento de código escrito en ${lang}. Necesito una documentación profesional y detallada para este código. Por favor, incluye una descripción general, explicaciones para cada función y método, parámetros de entrada, valores de retorno, y ejemplos de uso si es posible.
-      Código: ${code}
-      Por favor, proporciona la documentación de la manera más clara y detallada posible. Gracias.
-    `
-
+  private async useAi(prompt: string): Promise<string> {
     const model = createMistral({
       apiKey: this.configService.get('mistralKey'),
     })

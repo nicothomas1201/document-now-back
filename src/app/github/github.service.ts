@@ -7,9 +7,9 @@ import { RepositoryContent } from '../documents/dto'
 export class GithubService {
   constructor(private readonly httpService: HttpService) {}
 
-  async getRepositories(token: string) {
+  async getRepositories(token: string, page: number = 1, perPage: number = 30) {
     const { data } = await firstValueFrom(
-      this.httpService.get('/user/repos', {
+      this.httpService.get(`/user/repos?page=${page}&per_page=${perPage}`, {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${token}`,
@@ -17,16 +17,26 @@ export class GithubService {
       }),
     )
 
-    return data
+    const lastPageWithContent =
+      data.length < perPage && data.length > 0 ? page : null
+
+    const lastPageWithoutContent = data.length === 0 ? page - 1 : null
+
+    return {
+      repositories: data,
+      nextPage: page + 1,
+      lastPage: lastPageWithContent || lastPageWithoutContent,
+    }
   }
 
   async getRepoInfo(
     token: string,
     repoName: string,
     username: string,
+    info: string = '/',
   ): Promise<RepositoryContent> {
     const { data }: { data: RepositoryContent } = await firstValueFrom(
-      this.httpService.get(`/repos/${username}/${repoName}`, {
+      this.httpService.get(`/repos/${username}/${repoName}/${info}`, {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${token}`,
@@ -51,12 +61,17 @@ export class GithubService {
     return data
   }
 
-  async downloadProject(token: string, repoName: string, username: string) {
+  async downloadProject(
+    token: string,
+    repoName: string,
+    username: string,
+    preview: boolean,
+  ) {
     const headers = {
       Accept: 'application/vnd.github+json',
     }
 
-    if (typeof token === 'string' && token !== '') {
+    if (!preview && token) {
       headers['Authorization'] = `Bearer ${token}`
     }
 
@@ -73,6 +88,24 @@ export class GithubService {
   async getUser(token: string) {
     const { data } = await firstValueFrom(
       this.httpService.get('/user', {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    )
+
+    return data
+  }
+
+  async getRepoContent(
+    token: string,
+    username: string,
+    repoName: string,
+    path: string = '/',
+  ) {
+    const { data } = await firstValueFrom(
+      this.httpService.get(`/repos/${username}/${repoName}/contents/${path}`, {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${token}`,
