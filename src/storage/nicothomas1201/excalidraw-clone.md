@@ -1,172 +1,177 @@
-# Documentación del Proyecto "excalidraw-clone"
+# Excalidraw Clone Documentation
 
-## 1. Introducción
+## 1. Introduction
 
-### Descripción del Proyecto
-"excalidraw-clone" es un clon de Excalidraw desarrollado con React y TypeScript. Utiliza la librería Rough.js para proporcionar un estilo de dibujo a mano alzada. Este proyecto fue creado con fines educativos para aprender y practicar el desarrollo de aplicaciones con React y TypeScript.
+### Project Description
+Excalidraw Clone is a mini clone of Excalidraw built with React and TypeScript. It uses Rough.js for the sketchy, hand-drawn style. The project was created for learning purposes.
 
-### Tecnologías Utilizadas
-- **React**: Biblioteca de JavaScript para construir interfaces de usuario.
-- **React-DOM**: Paquete que proporciona métodos específicos del DOM para React.
-- **Rough.js**: Librería para crear gráficos con un estilo de dibujo a mano alzada.
-- **Zustand**: Biblioteca de gestión de estado para React.
-- **@types/react**: Tipos TypeScript para React.
-- **@types/react-dom**: Tipos TypeScript para React-DOM.
-- **@typescript-eslint/eslint-plugin**: Plugin ESLint para TypeScript.
-- **@typescript-eslint/parser**: Parser ESLint para TypeScript.
-- **@vitejs/plugin-react-swc**: Plugin Vite para React con SWC.
-- **eslint**: Herramienta para identificar y reportar patrones en JavaScript.
-- **eslint-plugin-react-hooks**: Plugin ESLint para reglas de hooks de React.
-- **eslint-plugin-react-refresh**: Plugin ESLint para React Refresh.
-- **typescript**: Lenguaje de programación que es un superconjunto tipado de JavaScript.
-- **vite**: Herramienta de construcción rápida para aplicaciones web modernas.
-- **vite-tsconfig-paths**: Plugin Vite para soportar rutas de tsconfig.
+### Technologies Used
+- React
+- React-DOM
+- Rough.js
+- Zustand
+- @types/react
+- @types/react-dom
+- @typescript-eslint/eslint-plugin
+- @typescript-eslint/parser
+- @vitejs/plugin-react-swc
+- ESLint
+- eslint-plugin-react-hooks
+- eslint-plugin-react-refresh
+- TypeScript
+- Vite
+- vite-tsconfig-paths
 
-## 2. Instalación
+## 2. Installation
 
-### Requisitos Previos
-- **Node.js**: Versión 14 o superior.
-- **npm** o **yarn**: Gestores de paquetes de Node.js.
+### Prerequisites
+- Node.js (version 14 or later)
+- npm (version 6 or later) or yarn
 
-### Pasos de Instalación
-1. Clonar el repositorio:
+### Installation Steps
+1. Clone the repository:
    ```bash
-   git clone https://github.com/tu-usuario/excalidraw-clone.git
+   git clone https://github.com/your-username/excalidraw-clone.git
    cd excalidraw-clone
    ```
-2. Instalar dependencias:
+2. Install dependencies:
    ```bash
    npm install
    ```
-3. Ejecutar la aplicación en modo de desarrollo:
+3. Start the development server:
    ```bash
    npm run dev
    ```
 
-## 3. Estructura del Proyecto
+## 3. Project Structure
 
-### Descripción General
-El proyecto sigue una estructura de directorios típica para aplicaciones React:
-- **src**: Contiene el código fuente de la aplicación.
-  - **components**: Componentes reutilizables.
-  - **hooks**: Hooks personalizados.
-  - **store**: Gestión de estado con Zustand.
-  - **utils**: Funciones utilitarias.
-- **public**: Contiene archivos estáticos como `index.html`.
-- **.eslintrc.cjs**: Configuración de ESLint.
-- **.gitignore**: Archivos y directorios ignorados por Git.
-- **package.json**: Configuración del proyecto y dependencias.
-- **README.md**: Documentación del proyecto.
+### General Description
+The project follows a standard React structure with additional TypeScript configurations. The main directories and files are:
 
-### Componentes Principales
-- **App.tsx**: Componente principal de la aplicación.
-- **Canvas.tsx**: Componente que maneja el lienzo de dibujo.
-- **Tools.tsx**: Componente que muestra las herramientas de dibujo.
-- **IconEllipse.tsx**, **IconLine.tsx**, **IconPan.tsx**, **IconRectangle.tsx**, **IconSelect.tsx**: Componentes de iconos para las herramientas de dibujo.
+- `src/`: Contains the source code of the application.
+  - `components/`: React components.
+  - `hooks/`: Custom hooks.
+  - `store/`: Zustand store for state management.
+  - `utils/`: Utility functions.
+- `public/`: Static files and assets.
+- `.eslintrc.cjs`: ESLint configuration.
+- `.gitignore`: Git ignore file.
+- `index.html`: Main HTML file.
+- `package.json`: Project metadata and scripts.
+- `README.md`: Project documentation.
 
-## 4. Guía de Uso
+### Main Components
+- `App.tsx`: The main application component.
+- `Canvas.tsx`: The canvas component where drawing occurs.
+- `Tools.tsx`: The toolbar component for selecting tools.
+- `useCanvas.ts`: Custom hook for managing canvas interactions.
+- `useCurrentTool.ts`: Custom hook for managing the current tool state.
 
-### Navegación por la Aplicación
-La aplicación permite dibujar en un lienzo utilizando diferentes herramientas. Las herramientas disponibles son:
-- **Pan**: Mover el lienzo.
-- **Select**: Seleccionar elementos.
-- **Rectangle**: Dibujar un rectángulo.
-- **Line**: Dibujar una línea.
+## 4. User Guide
 
-### Capturas de Pantalla
-![Captura de Pantalla](ruta/a/la/captura.png)
+### Navigating the Application
+- **Move Canvas**: Use the mouse wheel to zoom in and out. Press the `Alt` key and click-drag to pan the canvas.
+- **Select Tool**: Click on the tool icons in the toolbar or use the number keys:
+  - `1`: Pan tool
+  - `2`: Select tool
+  - `3`: Rectangle tool
+  - `4`: Line tool
 
-## 5. Desarrollo
+### Screenshots
+![Screenshot 1](path/to/screenshot1.png)
+![Screenshot 2](path/to/screenshot2.png)
 
-### Configuración del Entorno de Desarrollo
-1. Instalar Node.js y npm.
-2. Clonar el repositorio y navegar al directorio del proyecto.
-3. Instalar dependencias con `npm install`.
-4. Ejecutar la aplicación en modo de desarrollo con `npm run dev`.
+## 5. Development
 
-### Scripts de npm
-- **dev**: Ejecuta la aplicación en modo de desarrollo.
-- **build**: Compila la aplicación para producción.
-- **lint**: Ejecuta ESLint para verificar el código.
-- **preview**: Previsualiza la aplicación compilada.
+### Setting Up the Development Environment
+1. Ensure you have Node.js and npm installed.
+2. Clone the repository and install dependencies as described in the Installation section.
 
-## 6. Componentes y Páginas
+### npm Scripts
+- `dev`: Starts the development server using Vite.
+- `build`: Builds the application for production.
+- `lint`: Runs ESLint to check for code quality issues.
+- `preview`: Previews the production build.
 
-### Descripción de Componentes
-- **App.tsx**: Componente principal que renderiza los componentes `Tools` y `Canvas`.
-- **Canvas.tsx**: Componente que maneja el lienzo de dibujo y los eventos del mouse.
-- **Tools.tsx**: Componente que muestra las herramientas de dibujo y maneja la selección de herramientas.
-- **IconEllipse.tsx**, **IconLine.tsx**, **IconPan.tsx**, **IconRectangle.tsx**, **IconSelect.tsx**: Componentes de iconos para las herramientas de dibujo.
+## 6. Components and Pages
 
-### Páginas
-La aplicación no tiene múltiples páginas, sino que es una aplicación de una sola página (SPA) que renderiza el componente `App`.
+### Component Descriptions
+- **App.tsx**: The main application component that renders the `Tools` and `Canvas` components.
+- **Canvas.tsx**: The canvas component where drawing occurs. It uses the `useCanvas` hook to manage interactions.
+- **Tools.tsx**: The toolbar component that allows users to select different drawing tools.
+- **useCanvas.ts**: A custom hook that manages the canvas state and interactions, including drawing, panning, and zooming.
+- **useCurrentTool.ts**: A custom hook that manages the current tool state and handles keyboard shortcuts for tool selection.
 
-## 7. Estilos y Temas
+### Pages
+The application is a single-page application (SPA) with the main page rendered by `App.tsx`.
 
-### Sistema de Estilos
-Los estilos se manejan utilizando archivos CSS y CSS modules. El archivo principal de estilos es `index.css` y `App.css`.
+## 7. Styles and Themes
 
-### Temas
-La aplicación no implementa temas dinámicos.
+### Styling System
+The application uses CSS modules for styling. The main styles are defined in `App.css` and `index.css`.
 
-## 8. Gestión del Estado
+### Themes
+The application does not currently support multiple themes.
 
-### Contexto o Redux
-La gestión del estado se realiza utilizando Zustand. El archivo `toolsStore.ts` contiene la configuración del estado global.
+## 8. State Management
 
-### Hooks Personalizados
-- **useCanvas.ts**: Hook personalizado para manejar el estado y los eventos del lienzo de dibujo.
-- **useCurrentTool.ts**: Hook personalizado para manejar la herramienta de dibujo actual.
+### Context or Redux
+The application uses Zustand for state management. The `useToolsStore` is used to manage the current tool state.
 
-## 9. API y Servicios
+### Custom Hooks
+- **useCanvas.ts**: Manages the canvas state and interactions.
+- **useCurrentTool.ts**: Manages the current tool state and handles keyboard shortcuts.
 
-### Interacción con APIs
-La aplicación no realiza llamadas a APIs externas.
+## 9. API and Services
 
-## 10. Pruebas
+### API Interaction
+The application does not interact with external APIs.
 
-### Pruebas Unitarias y de Integración
-La aplicación no incluye pruebas unitarias o de integración.
+## 10. Testing
 
-### Cobertura de Pruebas
-No se han configurado herramientas para verificar la cobertura de las pruebas.
+### Unit and Integration Tests
+The project does not currently include unit or integration tests.
 
-## 11. Despliegue
+### Test Coverage
+The project does not currently include test coverage tools.
 
-### Procesos de Construcción y Despliegue
-1. Compilar la aplicación para producción:
+## 11. Deployment
+
+### Build and Deployment Process
+1. Build the application:
    ```bash
    npm run build
    ```
-2. Desplegar la aplicación en un servidor web.
+2. Deploy the contents of the `dist` directory to your hosting provider.
 
-## 12. Contribución
+## 12. Contribution
 
-### Guía para Contribuidores
-1. Fork el repositorio.
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`).
-3. Haz commit de tus cambios (`git commit -m 'Añadir nueva funcionalidad'`).
-4. Haz push a la rama (`git push origin feature/nueva-funcionalidad`).
-5. Abre un Pull Request.
+### Contributor Guide
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them with descriptive messages.
+4. Open a pull request with a detailed description of your changes.
 
 ### Roadmap
-- Añadir más herramientas de dibujo.
-- Implementar guardado y carga de dibujos.
-- Mejorar la interfaz de usuario.
+Future features and improvements are planned, including:
+- Adding more drawing tools.
+- Implementing undo/redo functionality.
+- Improving performance and responsiveness.
 
 ## 13. FAQ
 
-### Preguntas Frecuentes
-- **¿Cómo cambio la herramienta de dibujo?**
-  - Puedes cambiar la herramienta de dibujo utilizando los botones en la barra de herramientas o presionando las teclas numéricas (1-4).
+### Frequently Asked Questions
+- **Q: How do I change the drawing tool?**
+  - **A:** Click on the tool icons in the toolbar or use the number keys (1-4) to select different tools.
 
-## 14. Contactos
+- **Q: How do I zoom and pan the canvas?**
+  - **A:** Use the mouse wheel to zoom in and out. Press the `Alt` key and click-drag to pan the canvas.
 
-### Equipo de Desarrollo
-- **Nombre**: [Tu Nombre]
-- **Email**: [tu-email@example.com]
-- **GitHub**: [tu-usuario](https://github.com/tu-usuario)
+## 14. Contacts
+
+### Development Team
+For any questions or support, please contact the development team at [support@example.com](mailto:support@example.com).
 
 ---
 
-Esta documentación proporciona una visión general del proyecto "excalidraw-clone" y cómo utilizarlo, desarrollarlo y contribuir a él.
+This documentation provides a comprehensive overview of the Excalidraw Clone project, including installation instructions, project structure, user guide, development setup, and contribution guidelines.

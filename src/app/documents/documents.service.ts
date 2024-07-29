@@ -135,14 +135,16 @@ export class DocumentsService {
     username: string,
     reponame: string,
   ): Promise<boolean> {
-    const packageJson = await this.githubService.getRepoContent(
+    const { content } = await this.githubService.getRepoContent(
       token,
       username,
       reponame,
       'package.json',
     )
 
-    return packageJson['dependencies']['react'] !== undefined
+    const packageJson = JSON.parse(Buffer.from(content, 'base64').toString())
+
+    return packageJson.dependencies?.react !== undefined
   }
 
   async generateDocument(
