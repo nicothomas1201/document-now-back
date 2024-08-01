@@ -28,7 +28,7 @@ model Documentation {
   id      Int    @id @default(autoincrement())
   title   String
   content String @db.Text
-  repoName String @unique
+  repoName String
   user    User?  @relation(fields: [userId], references: [id])
   userId  Int
 }

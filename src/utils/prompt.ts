@@ -51,7 +51,7 @@ export const prompt = (
 ) => {
   return `
       Usa esta plantilla para generar la documentación de mi proyecto de React llamado "${name}".
-      Aquí está el codigo del repositorio: ${code}.
+      Aquí está el código del repositorio: ${code}.
       Aquí hay una pequeña descripción del proyecto para que tengas un poco mas de contexto: ${description}.
       La aplicación usa las siguientes tecnologías: ${techStack.join(', ')}.
       Asegúrate de proporcionar una descripción detallada de cada sección según la estructura dada.
@@ -60,6 +60,6 @@ export const prompt = (
 
       ${templateDoc}
 
-      Dame la documetación en ${docLang}:
+      Dame la documentación en ${docLang}:
   `
 }

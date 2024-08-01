@@ -18,6 +18,10 @@ export class GenerateDocumentDto {
   @IsString()
   @IsNotEmpty()
   lang: DocLanguage
+
+  @IsString()
+  @IsNotEmpty()
+  owner: DocLanguage
 }
 
 export class GeneratePublicDocumentDto extends GenerateDocumentDto {

@@ -25,11 +25,11 @@ export class DocumentsService {
     username: string,
     repoName: string,
   ) {
-    const contetCompress = await this.filesService.compressContent(content)
+    const contentCompress = await this.filesService.compressContent(content)
     return await this.prisma.documentation.create({
       data: {
         title,
-        content: contetCompress as string,
+        content: contentCompress as string,
         user: {
           connect: {
             username,
@@ -119,12 +119,12 @@ export class DocumentsService {
   //   }))
   // }
 
-  async getDocAndCreateMd(reponame: string, username: string) {
-    const doc = await this.findDocumentByRepoName(reponame)
+  async getDocAndCreateMd(repoName: string, username: string) {
+    const doc = await this.findDocumentByRepoName(repoName)
     const path = await this.filesService.createMarkdownFile(
       this.filesService.decompressContent(doc.content),
       username,
-      reponame,
+      repoName,
     )
 
     return path
@@ -133,12 +133,12 @@ export class DocumentsService {
   async isReactProject(
     token: string,
     username: string,
-    reponame: string,
+    repoName: string,
   ): Promise<boolean> {
     const { content } = await this.githubService.getRepoContent(
       token,
       username,
-      reponame,
+      repoName,
       'package.json',
     )
 
@@ -150,24 +150,25 @@ export class DocumentsService {
   async generateDocument(
     token: string,
     username: string,
+    owner: string,
     repoName: string,
-    descritpion: string,
+    description: string,
     title: string,
     language: DocLanguage,
     preview: boolean = false,
   ) {
-    const isReact = await this.isReactProject(token, username, repoName)
+    // const isReact = await this.isReactProject(token, username, repoName)
 
-    if (!isReact) {
-      return {
-        message: 'El proyecto no esta construido con react',
-      }
-    }
+    // if (!isReact) {
+    //   return {
+    //     message: 'El proyecto no esta construido con react',
+    //   }
+    // }
 
     const data = await this.githubService.downloadProject(
       token,
       repoName,
-      username,
+      owner,
       preview,
     )
 
@@ -190,22 +191,23 @@ export class DocumentsService {
       )
     })
 
-    const filesMaped = files.map((file) => ({
+    const filesMapped = files.map((file) => ({
       name: file.name,
       path: file.path,
       content: file.content,
     }))
 
-    const code = filesMaped.reduce((acc, file) => {
+    const code = filesMapped.reduce((acc, file) => {
       return `${acc}\n\n File: ${file.name}\n ${file.content}`
     }, '')
 
-    const dataPrompt = prompt(repoName, code, techStack, language, descritpion)
+    const dataPrompt = prompt(repoName, code, techStack, language, description)
 
     const documentation = await this.useAi(dataPrompt)
 
     if (!preview) {
       return await this.createUserDocument(
+        // <------ here is it
         title,
         documentation,
         username,

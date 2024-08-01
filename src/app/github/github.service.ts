@@ -46,6 +46,7 @@ export class GithubService {
 
     return data
   }
+
   async getPublicRepoInfo(
     repoName: string,
     username: string,
@@ -75,11 +76,16 @@ export class GithubService {
       headers['Authorization'] = `Bearer ${token}`
     }
 
+    const defaultBranch = await this.getDefaultBrach(username, repoName, token)
+
     const { data } = await firstValueFrom(
-      this.httpService.get(`/repos/${username}/${repoName}/zipball/main`, {
-        responseType: 'arraybuffer',
-        headers,
-      }),
+      this.httpService.get(
+        `/repos/${username}/${repoName}/zipball/${defaultBranch}`,
+        {
+          responseType: 'arraybuffer',
+          headers,
+        },
+      ),
     )
 
     return data
@@ -114,5 +120,22 @@ export class GithubService {
     )
 
     return data
+  }
+
+  async getDefaultBrach(username: string, repoName: string, token: string) {
+    try {
+      var repoInfo = await firstValueFrom(
+        this.httpService.get(`/repos/${username}/${repoName}`, {
+          headers: {
+            Authorization: `token ${token}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }),
+      )
+    } catch (error) {
+      console.log('<- Error to get default branch ->')
+    }
+
+    return repoInfo.data.default_branch
   }
 }

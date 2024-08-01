@@ -82,13 +82,14 @@ export class DocumentsController {
   @Post('generate')
   @UseGuards(JwtGuard)
   async generateDocument(
-    @Body() { repoName, description, lang, title }: GenerateDocumentDto,
+    @Body() { repoName, description, lang, title, owner }: GenerateDocumentDto,
     @User() user: UserDecorator,
   ) {
     try {
       return await this.documentsService.generateDocument(
         user.github_token,
         user.username,
+        owner,
         repoName,
         description,
         title,
@@ -110,6 +111,7 @@ export class DocumentsController {
         '',
         username,
         repoName,
+        '',
         description,
         title,
         lang,
