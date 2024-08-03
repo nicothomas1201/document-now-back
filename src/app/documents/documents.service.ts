@@ -1,21 +1,23 @@
-import { Injectable } from '@nestjs/common'
-import { createMistral } from '@ai-sdk/mistral'
-import { generateText } from 'ai'
-import { ConfigService } from '@nestjs/config'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { GithubService } from '../github'
 import * as fs from 'fs'
 import { FilesService } from '../files'
 import { prompt } from '@/utils'
 import { DocLanguage } from './dto'
 import { PrismaService } from '@/services'
+import { AiService } from '../ai/ai.service'
 
 @Injectable()
 export class DocumentsService {
   constructor(
-    private readonly configService: ConfigService,
     private readonly githubService: GithubService,
     private readonly filesService: FilesService,
     private readonly prisma: PrismaService,
+    private readonly aiService: AiService,
   ) {}
 
   // prisma
@@ -73,98 +75,31 @@ export class DocumentsService {
     })
   }
 
-  // async getUserDocsWithRepos(token: string, username: string) {
-  //   const docs = await this.getUserDocuments(username)
-
-  //   const reposPromises = docs.map(
-  //     (doc) =>
-  //       new Promise(async (resolve, reject) => {
-  //         try {
-  //           const repoInfo = await this.githubService.getRepoInfo(
-  //             token,
-  //             doc.repoName,
-  //             username,
-  //           )
-
-  //           resolve({
-  //             repoInfo,
-  //           })
-  //         } catch (err) {
-  //           reject(err)
-  //         }
-  //       }),
-  //   )
-
-  //   const response = await Promise.allSettled(reposPromises)
-
-  //   const correctRepos = response
-  //     .filter((res) => res.status === STATUS_PROMISE.correct)
-  //     .map((res) => {
-  //       const value = res.value as { repoInfo: RepositoryContent }
-  //       return value.repoInfo
-  //     })
-
-  //   const errorRepos = response
-  //     .filter((repo) => repo.status === STATUS_PROMISE.error)
-  //     .map((repo) => repo.reason)
-
-  //   // TODO: Hacer algo con los errorRepos
-  //   console.log(errorRepos)
-
-  //   return docs.map((doc) => ({
-  //     ...doc,
-  //     repoInfo: correctRepos.find(
-  //       (repo) => repo.name === doc.repoName,
-  //     ) as RepositoryContent,
-  //   }))
-  // }
-
   async getDocAndCreateMd(repoName: string, username: string) {
     const doc = await this.findDocumentByRepoName(repoName)
+    if (!doc) {
+      throw new NotFoundException(
+        `Document with repoName ${repoName} not found`,
+      )
+    }
     const path = await this.filesService.createMarkdownFile(
       this.filesService.decompressContent(doc.content),
       username,
       repoName,
     )
-
     return path
   }
 
-  async isReactProject(
-    token: string,
-    username: string,
-    repoName: string,
-  ): Promise<boolean> {
-    const { content } = await this.githubService.getRepoContent(
-      token,
-      username,
-      repoName,
-      'package.json',
-    )
-
-    const packageJson = JSON.parse(Buffer.from(content, 'base64').toString())
-
-    return packageJson.dependencies?.react !== undefined
+  async getUsers() {
+    return await this.prisma.user.findMany()
   }
 
-  async generateDocument(
+  async manageProjectContent(
     token: string,
-    username: string,
-    owner: string,
     repoName: string,
-    description: string,
-    title: string,
-    language: DocLanguage,
+    owner: string,
     preview: boolean = false,
-  ) {
-    // const isReact = await this.isReactProject(token, username, repoName)
-
-    // if (!isReact) {
-    //   return {
-    //     message: 'El proyecto no esta construido con react',
-    //   }
-    // }
-
+  ): Promise<string> {
     const data = await this.githubService.downloadProject(
       token,
       repoName,
@@ -182,7 +117,40 @@ export class DocumentsService {
 
     await this.filesService.extractAndDeleteZip(zipPath, extractPath)
 
+    return extractPath
+  }
+
+  async generateDocument(
+    token: string,
+    username: string, // solo se va a usar para guardar el documento con el usuario que lo generó
+    owner: string, // se usa para obtener el verdadero owner del repo
+    repoName: string,
+    description: string,
+    title: string,
+    language: DocLanguage,
+    preview: boolean = false,
+  ) {
+    const isReact = await this.githubService.isReactProject(
+      token,
+      owner,
+      repoName,
+    )
+
+    console.log(isReact)
+
+    if (!isReact) {
+      throw new BadRequestException('The project is not a React project')
+    }
+
+    const extractPath = await this.manageProjectContent(
+      token,
+      repoName,
+      owner,
+      preview,
+    )
+
     const techStack = []
+
     const files = await this.filesService.readFiles(extractPath, (content) => {
       const { dependencies, devDependencies } = JSON.parse(content)
       techStack.push(
@@ -203,16 +171,12 @@ export class DocumentsService {
 
     const dataPrompt = prompt(repoName, code, techStack, language, description)
 
-    const documentation = await this.useAi(dataPrompt)
+    await this.aiService.addPromptToQueue(dataPrompt, username, repoName, title)
 
     if (!preview) {
-      return await this.createUserDocument(
-        // <------ here is it
-        title,
-        documentation,
-        username,
-        repoName,
-      )
+      return {
+        message: 'Document is being generated',
+      }
     }
   }
 
@@ -226,18 +190,5 @@ export class DocumentsService {
     })
 
     return data
-  }
-
-  private async useAi(prompt: string): Promise<string> {
-    const model = createMistral({
-      apiKey: this.configService.get('mistralKey'),
-    })
-
-    const { text } = await generateText({
-      model: model('mistral-large-latest'),
-      prompt,
-    })
-
-    return text
   }
 }

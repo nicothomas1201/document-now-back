@@ -31,61 +31,54 @@ export class AuthController {
   @Get('/callback')
   @UseGuards(AuthGuard('github'))
   async callback(@Req() req, @Res() res) {
-    try {
-      const data = req.user
-      const user = req.user.profile['_json']
+    const data = req.user
+    const user = req.user.profile['_json']
 
-      const payload: {
-        sub: number
-        username: string
-      } = {
-        sub: user.id,
-        username: user.login,
-      }
+    const payload: {
+      sub: number
+      username: string
+    } = {
+      sub: user.id,
+      username: user.login,
+    }
 
-      const token = this.jwtService.sign(payload)
+    const token = this.jwtService.sign(payload)
 
-      if (!token) {
-        throw new HttpException(
-          'Failed create token',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        )
-      }
-
-      const userExists = await this.userService.findUnique({
-        username: payload.username,
-      })
-
-      if (!userExists) {
-        await this.userService.createUser({
-          email: user.email,
-          name: user.name,
-          username: user.login,
-          github_id: user.id,
-          github_token: data.accessToken,
-          access_token: token,
-        })
-      } else {
-        await this.userService.updateUser(
-          {
-            username: userExists.username,
-          },
-          {
-            github_token: data.accessToken,
-            access_token: token,
-          },
-        )
-      }
-
-      // Aqui vamos a firmar un jwt y redirigir al cliente
-      const redirectUrl = this.configService.get('REDIRECT_URL')
-      res.redirect(`${redirectUrl}?token=` + token)
-      return { token }
-    } catch (err) {
+    if (!token) {
       throw new HttpException(
-        'Failed create user',
+        'Failed create token',
         HttpStatus.INTERNAL_SERVER_ERROR,
       )
     }
+
+    const userExists = await this.userService.findUnique({
+      username: payload.username,
+    })
+
+    if (!userExists) {
+      await this.userService.createUser({
+        email: user.email,
+        name: user.name,
+        username: user.login,
+        github_id: user.id,
+        github_token: data.accessToken,
+        access_token: token,
+      })
+    } else {
+      await this.userService.updateUser(
+        {
+          username: userExists.username,
+        },
+        {
+          github_token: data.accessToken,
+          access_token: token,
+        },
+      )
+    }
+
+    // Aqui vamos a firmar un jwt y redirigir al cliente
+    const redirectUrl = this.configService.get('REDIRECT_URL')
+    res.redirect(`${redirectUrl}?token=` + token)
+    return { token }
   }
 }

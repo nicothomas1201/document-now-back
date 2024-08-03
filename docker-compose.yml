@@ -1,16 +1,19 @@
 version: '3.8'
+
 services:
   postgres:
     image: postgres
     restart: always
     container_name: postgres-documentnow
     ports:
-      - 4001:5432
+      - 5432:5432
     environment:
       - DATABASE_HOST=127.0.0.1
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=documentnow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4
@@ -21,3 +24,23 @@ services:
       - 8080:80
     depends_on:
       - postgres
+
+  redis:
+    image: redis:latest
+    container_name: redis-documentnow
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - documentnow-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  documentnow-network:
+    driver: bridge

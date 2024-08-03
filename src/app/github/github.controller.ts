@@ -1,11 +1,4 @@
-import {
-  Controller,
-  HttpStatus,
-  HttpException,
-  Get,
-  UseGuards,
-  Query,
-} from '@nestjs/common'
+import { Controller, Get, UseGuards, Query } from '@nestjs/common'
 import { GithubService } from './github.service'
 import { JwtGuard } from '@/guards'
 import { User } from '@/decorators'
@@ -27,34 +20,18 @@ export class GithubController {
       per_page: string
     },
   ) {
-    try {
-      const { page, per_page } = query
-      return this.githubService.getRepositories(
-        user.github_token,
-        Number(page),
-        Number(per_page),
-      )
-    } catch (err) {
-      console.log(err)
-      throw new HttpException(
-        'Failed to get user repos',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
-    }
+    const { page, per_page } = query
+    return this.githubService.getRepositories(
+      user.github_token,
+      Number(page),
+      Number(per_page),
+    )
   }
 
   @Get('user')
   @UseGuards(JwtGuard)
   async getUser(@User() user: UserDecorator) {
-    try {
-      const data = await this.githubService.getUser(user.github_token)
-      return data
-    } catch (err) {
-      console.log(err)
-      throw new HttpException(
-        'Failed to get user',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
-    }
+    const data = await this.githubService.getUser(user.github_token)
+    return data
   }
 }

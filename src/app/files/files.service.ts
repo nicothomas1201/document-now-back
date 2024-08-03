@@ -89,7 +89,18 @@ export class FilesService {
     rootDirPath: string,
     cb: (content: string) => void,
   ): Promise<File[]> {
-    const multimedia = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'mp4', 'mp3']
+    const multimedia = [
+      'png',
+      'jpg',
+      'jpeg',
+      'gif',
+      'svg',
+      'mp4',
+      'mp3',
+      'webm',
+      'wav',
+      'avif',
+    ]
     const lock = [
       'package-lock.json',
       'yarn.lock',

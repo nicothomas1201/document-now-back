@@ -3,8 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
-  HttpStatus,
   NotFoundException,
   Param,
   Post,
@@ -12,10 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { DocumentsService } from './documents.service'
-import { GenerateDocumentDto, GeneratePublicDocumentDto } from './dto'
+import { GenerateDocumentDto } from './dto'
 import { User } from '@/decorators'
 import { JwtGuard } from '@/guards'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import * as path from 'path'
 import { existsSync } from 'fs'
 import { Response } from 'express'
@@ -30,15 +27,7 @@ export class DocumentsController {
   @Get('user')
   @UseGuards(JwtGuard)
   async getDocuments(@User() user: UserDecorator) {
-    try {
-      return await this.documentsService.getUserDocuments(user.username)
-    } catch (err) {
-      console.log(err)
-      throw new HttpException(
-        'Failed in get user docs with repos',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
-    }
+    return await this.documentsService.getUserDocuments(user.username)
   }
 
   @Get('user/:reponame')
@@ -48,23 +37,12 @@ export class DocumentsController {
     @User() user: UserDecorator,
     @Res() res: Response,
   ) {
-    try {
-      const path = await this.documentsService.getDocAndCreateMd(
-        reponame,
-        user.username,
-      )
+    const path = await this.documentsService.getDocAndCreateMd(
+      reponame,
+      user.username,
+    )
 
-      res.sendFile(path)
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError) {
-        throw new HttpException(err.meta.cause, HttpStatus.NOT_FOUND)
-      }
-
-      throw new HttpException(
-        'Failed in get document by reponame',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
-    }
+    res.sendFile(path)
   }
 
   @Get(':filename')
@@ -85,41 +63,32 @@ export class DocumentsController {
     @Body() { repoName, description, lang, title, owner }: GenerateDocumentDto,
     @User() user: UserDecorator,
   ) {
-    try {
-      return await this.documentsService.generateDocument(
-        user.github_token,
-        user.username,
-        owner,
-        repoName,
-        description,
-        title,
-        lang,
-      )
-    } catch (err) {
-      console.log(err)
-      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
-    }
+    return await this.documentsService.generateDocument(
+      user.github_token,
+      user.username,
+      owner,
+      repoName,
+      description,
+      title,
+      lang,
+    )
   }
 
   @Post('generate/preview')
   async generatePublicDocument(
     @Body()
-    { username, repoName, title, description, lang }: GeneratePublicDocumentDto,
+    { owner, repoName, title, description, lang }: GenerateDocumentDto,
   ) {
-    try {
-      return await this.documentsService.generateDocument(
-        '',
-        username,
-        repoName,
-        '',
-        description,
-        title,
-        lang,
-        true,
-      )
-    } catch (err) {
-      throw new HttpException(err.message, err.response.status)
-    }
+    return await this.documentsService.generateDocument(
+      '', // token,
+      '', // username
+      owner, // owner
+      repoName, // repoName
+      description,
+      title,
+      lang,
+      true,
+    )
   }
 
   @Delete(':reponame')
@@ -128,20 +97,9 @@ export class DocumentsController {
     @Param('reponame') repoName: string,
     @User() user: UserDecorator,
   ) {
-    try {
-      return await this.documentsService.deleteDocumentByRepoName(
-        repoName,
-        user.username,
-      )
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError) {
-        throw new HttpException(err.meta.cause, HttpStatus.NOT_FOUND)
-      }
-
-      throw new HttpException(
-        'Failed in delete document',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
-    }
+    return await this.documentsService.deleteDocumentByRepoName(
+      repoName,
+      user.username,
+    )
   }
 }

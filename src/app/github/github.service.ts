@@ -29,6 +29,23 @@ export class GithubService {
     }
   }
 
+  async isReactProject(
+    token: string,
+    owner: string,
+    reponame: string,
+  ): Promise<boolean> {
+    const { content } = await this.getRepoContent(
+      token,
+      owner,
+      reponame,
+      'package.json',
+    )
+
+    const packageJson = JSON.parse(Buffer.from(content, 'base64').toString())
+
+    return packageJson.dependencies?.react !== undefined
+  }
+
   async getRepoInfo(
     token: string,
     repoName: string,
@@ -123,18 +140,14 @@ export class GithubService {
   }
 
   async getDefaultBrach(username: string, repoName: string, token: string) {
-    try {
-      var repoInfo = await firstValueFrom(
-        this.httpService.get(`/repos/${username}/${repoName}`, {
-          headers: {
-            Authorization: `token ${token}`,
-            Accept: 'application/vnd.github.v3+json',
-          },
-        }),
-      )
-    } catch (error) {
-      console.log('<- Error to get default branch ->')
-    }
+    const repoInfo = await firstValueFrom(
+      this.httpService.get(`/repos/${username}/${repoName}`, {
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      }),
+    )
 
     return repoInfo.data.default_branch
   }

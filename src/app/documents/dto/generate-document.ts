@@ -23,9 +23,3 @@ export class GenerateDocumentDto {
   @IsNotEmpty()
   owner: DocLanguage
 }
-
-export class GeneratePublicDocumentDto extends GenerateDocumentDto {
-  @IsString()
-  @IsNotEmpty()
-  username: string
-}
