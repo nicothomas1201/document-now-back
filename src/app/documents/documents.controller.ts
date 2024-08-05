@@ -91,15 +91,9 @@ export class DocumentsController {
     )
   }
 
-  @Delete(':reponame')
+  @Delete(':id')
   @UseGuards(JwtGuard)
-  async deleteDocument(
-    @Param('reponame') repoName: string,
-    @User() user: UserDecorator,
-  ) {
-    return await this.documentsService.deleteDocumentByRepoName(
-      repoName,
-      user.username,
-    )
+  async deleteDocument(@Param('id') id: string, @User() user: UserDecorator) {
+    return await this.documentsService.deleteDocumentById(id, user.username)
   }
 }

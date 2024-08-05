@@ -2,10 +2,14 @@ import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job } from 'bullmq'
 import { Queue } from './dto'
 import { AiService } from './ai.service'
+import { EventsService } from '../gateway/events.service'
 
 @Processor(Queue.aiQueueName)
 export class AiProcessor extends WorkerHost {
-  constructor(private readonly aiService: AiService) {
+  constructor(
+    private readonly aiService: AiService,
+    private readonly socketGateway: EventsService,
+  ) {
     super()
   }
 
@@ -14,16 +18,26 @@ export class AiProcessor extends WorkerHost {
       case Queue.generateProccessName:
         const { username, repoName, title, prompt } = job.data
 
-        const userDoc = await this.aiService.generateUserDoc(
-          prompt,
-          username,
-          repoName,
-          title,
-        )
+        setTimeout(async () => {
+          // Use the AI service to generate the document
+          const { id } = await this.aiService.generateUserDoc(
+            prompt,
+            username,
+            repoName,
+            title,
+          )
 
-        console.log(userDoc)
-
-      // TODO: Usar web sockets para enviar el documento al cliente
+          if (true) {
+            console.log('Generated document', 1)
+            await this.socketGateway.emitData('generated-document', {
+              title,
+              repoName,
+              username,
+              id,
+              loading: false,
+            })
+          }
+        }, 20000)
     }
   }
 }

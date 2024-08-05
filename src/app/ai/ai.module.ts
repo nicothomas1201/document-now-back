@@ -4,9 +4,12 @@ import { BullModule } from '@nestjs/bullmq'
 import { AiProcessor } from './ai.proccessor'
 import { Queue } from './dto'
 import { DocumentsModule } from '../documents'
+import { EventsGateway, EventsModule } from '../gateway'
+import { EventsService } from '../gateway/events.service'
 
 @Module({
   imports: [
+    EventsModule,
     forwardRef(() => DocumentsModule),
     BullModule.forRoot({
       connection: {
@@ -18,7 +21,7 @@ import { DocumentsModule } from '../documents'
       name: Queue.aiQueueName,
     }),
   ],
-  providers: [AiService, AiProcessor],
+  providers: [AiService, AiProcessor, EventsService, EventsGateway],
   exports: [AiService, BullModule],
 })
 export class AiModule {}

@@ -42,10 +42,13 @@ export class DocumentsService {
     })
   }
 
-  async findDocumentByRepoName(repoName: string) {
-    return await this.prisma.documentation.findUnique({
+  async findDocumentByRepoName(repoName: string, username: string) {
+    return await this.prisma.documentation.findFirst({
       where: {
         repoName,
+        user: {
+          username,
+        },
       },
     })
   }
@@ -76,17 +79,20 @@ export class DocumentsService {
   }
 
   async getDocAndCreateMd(repoName: string, username: string) {
-    const doc = await this.findDocumentByRepoName(repoName)
+    const doc = await this.findDocumentByRepoName(repoName, username)
+
     if (!doc) {
       throw new NotFoundException(
         `Document with repoName ${repoName} not found`,
       )
     }
+
     const path = await this.filesService.createMarkdownFile(
       this.filesService.decompressContent(doc.content),
       username,
       repoName,
     )
+
     return path
   }
 
@@ -136,8 +142,6 @@ export class DocumentsService {
       repoName,
     )
 
-    console.log(isReact)
-
     if (!isReact) {
       throw new BadRequestException('The project is not a React project')
     }
@@ -175,17 +179,20 @@ export class DocumentsService {
 
     if (!preview) {
       return {
-        message: 'Document is being generated',
+        title,
+        repoName,
+        username,
+        loading: true,
       }
     }
   }
 
-  async deleteDocumentByRepoName(repoName: string, username: string) {
-    await this.filesService.deleteMarkdownFile(username, repoName)
+  async deleteDocumentById(id: string, username: string) {
+    await this.filesService.deleteMarkdownFile(username, id)
 
     const data = await this.prisma.documentation.delete({
       where: {
-        repoName,
+        id: Number(id),
       },
     })
 
