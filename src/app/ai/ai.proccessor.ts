@@ -28,7 +28,7 @@ export class AiProcessor extends WorkerHost {
           )
 
           if (true) {
-            console.log('Generated document', 1)
+            console.log('Generated document', id)
             await this.socketGateway.emitData('generated-document', {
               title,
               repoName,
