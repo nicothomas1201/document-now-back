@@ -22,8 +22,22 @@ export class GithubService {
 
     const lastPageWithoutContent = data.length === 0 ? page - 1 : null
 
+    const reactProjects = await Promise.all(
+      data.filter(async (repo: any) => {
+        const isReact = await this.isReactProject(
+          token,
+          repo.owner.login,
+          repo.name,
+        )
+
+        return isReact
+      }),
+    )
+
+    console.log(reactProjects)
+
     return {
-      repositories: data,
+      reposiotries: data,
       nextPage: page + 1,
       lastPage: lastPageWithContent || lastPageWithoutContent,
     }

@@ -12,6 +12,7 @@ export class GithubController {
 
   @Get('repos')
   @UseGuards(JwtGuard)
+  // los repos que solo sean react
   async getUserRepos(
     @User() user: UserDecorator,
     @Query()
