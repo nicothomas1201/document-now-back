@@ -1,12 +1,14 @@
 import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createMistral } from '@ai-sdk/mistral'
-import { generateText } from 'ai'
+import { generateText, streamText } from 'ai'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Queue } from 'bullmq'
 import { Queue as EQueue } from './dto'
 import { DocumentsService } from '../documents'
 import { ModuleRef } from '@nestjs/core'
+import { createWriteStream } from 'node:fs'
+import path from 'node:path'
 
 @Injectable()
 export class AiService implements OnModuleInit {
@@ -24,13 +26,13 @@ export class AiService implements OnModuleInit {
   }
 
   async addPromptToQueue(
-    prompt: string,
+    prompts: string[],
     username: string,
     repoName: string,
     title: string,
   ) {
     if (
-      prompt.length === 0 ||
+      prompts.length === 0 ||
       username === '' ||
       repoName === '' ||
       title === ''
@@ -39,7 +41,7 @@ export class AiService implements OnModuleInit {
     }
 
     await this.aiQueue.add('generate-doc', {
-      prompt,
+      prompts,
       title,
       username,
       repoName,
@@ -47,25 +49,43 @@ export class AiService implements OnModuleInit {
   }
 
   async generateAiText(prompt: string) {
+    console.log('here')
     const model = createMistral({
       apiKey: this.configService.get('mistralKey'),
     })
 
-    const { text } = await generateText({
+    const { textStream } = await streamText({
       model: model('mistral-large-latest'),
       prompt,
     })
+
+    let text = ''
+    // const writeStream = createWriteStream(
+    //   '/home/yeider/Dev/document-now-back/temps/responseAi.md',
+    //   { flags: 'a' },
+    // )
+
+    for await (const textPart of textStream) {
+      text += textPart
+      // writeStream.write(textPart)
+      process.stdout.write(textPart)
+    }
 
     return text
   }
 
   async generateUserDoc(
-    prompt: string,
+    prompts: string[],
     username: string,
     repoName: string,
     title: string,
   ) {
-    const documentation = await this.generateAiText(prompt)
+    let documentation = ''
+
+    for (let prompt of prompts) {
+      const textGenerated = await this.generateAiText(prompt)
+      documentation = `${documentation} \n ${textGenerated}`
+    }
 
     const data = await this.service.createUserDocument(
       title,

@@ -16,19 +16,19 @@ export class AiProcessor extends WorkerHost {
   async process(job: Job<any, any, string>): Promise<void> {
     switch (job.name) {
       case Queue.generateProccessName:
-        const { username, repoName, title, prompt } = job.data
+        const { username, repoName, title, prompts } = job.data
 
         setTimeout(async () => {
           // Use the AI service to generate the document
           const { id } = await this.aiService.generateUserDoc(
-            prompt,
+            prompts,
             username,
             repoName,
             title,
           )
 
           if (true) {
-            console.log('Generated document', id)
+            console.log('Document generated', id)
             await this.socketGateway.emitData('generated-document', {
               title,
               repoName,

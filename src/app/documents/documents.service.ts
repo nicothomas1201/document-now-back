@@ -6,10 +6,12 @@ import {
 import { GithubService } from '../github'
 import * as fs from 'fs'
 import { FilesService } from '../files'
-import { prompt } from '@/utils'
+import { generatePrompt } from '@/utils'
 import { DocLanguage } from './dto'
 import { PrismaService } from '@/services'
 import { AiService } from '../ai/ai.service'
+import * as natural from 'natural'
+import acorn from 'acorn'
 
 @Injectable()
 export class DocumentsService {
@@ -163,19 +165,30 @@ export class DocumentsService {
       )
     })
 
-    const filesMapped = files.map((file) => ({
-      name: file.name,
-      path: file.path,
-      content: file.content,
-    }))
+    const filesMapped = files
+      .filter((file) => file.name != 'package.json')
+      .map((file) => ({
+        name: file.name,
+        path: file.path,
+        content: file.content,
+      }))
 
-    const code = filesMapped.reduce((acc, file) => {
-      return `${acc}\n\n File: ${file.name}\n ${file.content}`
-    }, '')
+    const code = this.getCodeOfFiles(filesMapped)
 
-    const dataPrompt = prompt(repoName, code, techStack, language, description)
+    const dataPrompts = generatePrompt(
+      repoName,
+      code,
+      techStack,
+      language,
+      description,
+    )
 
-    await this.aiService.addPromptToQueue(dataPrompt, username, repoName, title)
+    await this.aiService.addPromptToQueue(
+      dataPrompts,
+      username,
+      repoName,
+      title,
+    )
 
     if (!preview) {
       return {
@@ -185,6 +198,35 @@ export class DocumentsService {
         loading: true,
       }
     }
+  }
+
+  getCodeOfFiles(
+    filesMapped: { name: string; content: string; path: string }[],
+  ): string[] {
+    const tokenizer = new natural.WordPunctTokenizer()
+    let tokensAccumulator = 0
+    let currentArray = 0
+
+    const filesPerTokens = [[]]
+
+    for (let file of filesMapped) {
+      const tokens = tokenizer.tokenize(file.content).length
+
+      if (tokens + tokensAccumulator > 80000) {
+        tokensAccumulator = 0
+        currentArray++
+        filesPerTokens.push([])
+      }
+
+      tokensAccumulator = tokensAccumulator + tokens
+      filesPerTokens[currentArray].push(file)
+    }
+
+    return filesPerTokens.map((files) => {
+      return files.reduce((acc, file) => {
+        return `${acc}\n\n File: ${file.name}\n Folder: ${file.path}\n ${file.content}`
+      })
+    })
   }
 
   async deleteDocumentById(id: string, username: string) {

@@ -22,22 +22,30 @@ export class GithubService {
 
     const lastPageWithoutContent = data.length === 0 ? page - 1 : null
 
-    const reactProjects = await Promise.all(
-      data.filter(async (repo: any) => {
-        const isReact = await this.isReactProject(
-          token,
-          repo.owner.login,
-          repo.name,
-        )
+    // const getReposFiltered = () => {
+    //   return new Promise((resolve, reject) => {
+    //     const reposFiltered = []
 
-        return isReact
-      }),
-    )
+    //     data.forEach(async (repo: any, index) => {
+    //       const isReact = await this.isReactProject(
+    //         token,
+    //         repo.owner.login,
+    //         repo.name,
+    //       )
 
-    console.log(reactProjects)
+    //       if (Boolean(isReact)) {
+    //         reposFiltered.push(repo)
+    //       }
+
+    //       if (index === data.length - 1) resolve(reposFiltered)
+    //     })
+    //   })
+    // }
+
+    // const reactRepos = await getReposFiltered()
 
     return {
-      reposiotries: data,
+      repositories: data,
       nextPage: page + 1,
       lastPage: lastPageWithContent || lastPageWithoutContent,
     }
@@ -48,16 +56,20 @@ export class GithubService {
     owner: string,
     reponame: string,
   ): Promise<boolean> {
-    const { content } = await this.getRepoContent(
-      token,
-      owner,
-      reponame,
-      'package.json',
-    )
+    try {
+      const { content } = await this.getRepoContent(
+        token,
+        owner,
+        reponame,
+        'package.json',
+      )
 
-    const packageJson = JSON.parse(Buffer.from(content, 'base64').toString())
+      const packageJson = JSON.parse(Buffer.from(content, 'base64').toString())
 
-    return packageJson.dependencies?.react !== undefined
+      return packageJson.dependencies?.react !== undefined
+    } catch (error) {
+      return false
+    }
   }
 
   async getRepoInfo(

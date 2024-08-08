@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres
     restart: always
     container_name: postgres-documentnow
     ports:
-      - 5432:5432
+      - 4001:5432
     environment:
       - DATABASE_HOST=127.0.0.1
       - POSTGRES_USER=root

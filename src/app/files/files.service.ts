@@ -90,17 +90,92 @@ export class FilesService {
     cb: (content: string) => void,
   ): Promise<File[]> {
     const multimedia = [
-      'png',
+      // Imágenes Raster
       'jpg',
       'jpeg',
+      'png',
       'gif',
+      'bmp',
+      'tiff',
+      'tif',
+      'psd',
+      'webp',
+      'heic',
+      'heif',
+      'raw',
+      'ico',
+      'dds',
+      'exr',
+      'tga',
+      'pcx',
+      'svgz',
+      'avif',
+
+      // Imágenes Vectoriales
       'svg',
+      'ai',
+      'eps',
+      'pdf',
+      'cdr',
+
+      // Formatos de Imágenes 3D
+      '3ds',
+      'obj',
+      'fbx',
+      'stl',
+      'dae',
+
+      // Formatos Específicos o Menos Comunes
+      'xcf',
+      'dcm',
+      'djvu',
+      'dzi',
+      'jp2',
+      'jxr',
+      'apng',
+
+      // Fuentes TrueType y OpenType
+      'ttf',
+      'otf',
+
+      // Fuentes PostScript
+      'pfb',
+      'pfm',
+      'afm',
+      'ps',
+
+      // Fuentes Web
+      'woff',
+      'woff2',
+      'eot',
+
+      // Fuentes Bitmap
+      'fon',
+      'bdf',
+      'fnt',
+
+      // Otras Extensiones de Fuentes
+      'suit',
+      'dfont',
+      'gdf',
+      'psf',
+
+      // Formatos de Audio y Video
       'mp4',
       'mp3',
-      'webm',
       'wav',
-      'avif',
+      'avi',
+      'mov',
+      'wmv',
+      'flv',
+      'mkv',
+      'webm',
+      'm4v',
+      '3gp',
+      'mxf',
+      'ts',
     ]
+
     const lock = [
       'package-lock.json',
       'yarn.lock',
@@ -109,11 +184,17 @@ export class FilesService {
       'bun.lockb',
     ]
 
+    const unreadFiles = ['tsconfig', 'vite.config']
+
+    const unreadFolders = ['node_modules', 'dist', 'public', 'dist-ssr']
+
     const result: File[] = []
     const projectDir = fs.readdirSync(rootDirPath)
     const completePath = path.join(rootDirPath, projectDir[0])
 
     const readDir = async (dirPath: string) => {
+      if (unreadFolders.includes(dirPath)) return
+
       const files = await fs.promises.readdir(dirPath, { withFileTypes: true })
 
       for (const file of files) {
@@ -122,10 +203,14 @@ export class FilesService {
         if (file.isDirectory()) {
           await readDir(filePath)
         } else {
-          const fileExension = file.name.split('.').pop()
+          const fileExtension = file.name.split('.').pop()
 
           // Si es un archivo multimedia no se lee
-          if (!multimedia.includes(fileExension) && !lock.includes(file.name)) {
+          if (
+            !multimedia.includes(fileExtension) &&
+            !lock.includes(file.name) &&
+            !unreadFiles.includes(file.name)
+          ) {
             const content = await fs.promises.readFile(filePath, 'utf-8')
 
             if (file.name === 'package.json') {

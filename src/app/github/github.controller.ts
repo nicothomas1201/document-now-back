@@ -22,6 +22,7 @@ export class GithubController {
     },
   ) {
     const { page, per_page } = query
+
     return this.githubService.getRepositories(
       user.github_token,
       Number(page),
