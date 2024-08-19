@@ -60,14 +60,9 @@ export class AiService implements OnModuleInit {
     })
 
     let text = ''
-    // const writeStream = createWriteStream(
-    //   '/home/yeider/Dev/document-now-back/temps/responseAi.md',
-    //   { flags: 'a' },
-    // )
 
     for await (const textPart of textStream) {
       text += textPart
-      // writeStream.write(textPart)
       process.stdout.write(textPart)
     }
 
@@ -80,6 +75,7 @@ export class AiService implements OnModuleInit {
     repoName: string,
     title: string,
   ) {
+    console.log(repoName)
     let documentation = ''
 
     for (let prompt of prompts) {

@@ -202,31 +202,50 @@ export class DocumentsService {
 
   getCodeOfFiles(
     filesMapped: { name: string; content: string; path: string }[],
-  ): string[] {
-    const tokenizer = new natural.WordPunctTokenizer()
-    let tokensAccumulator = 0
-    let currentArray = 0
-
-    const filesPerTokens = [[]]
+  ): { filesIntro: string; files: string[]; structure: string } {
+    let chunk = 3
+    const filesSplit = []
+    let chunkFiles = []
+    const introductionFiles = []
+    let structure = ''
 
     for (let file of filesMapped) {
-      const tokens = tokenizer.tokenize(file.content).length
+      structure = `${structure} \n ${file.path}`
+      if (file.name.startsWith('.')) continue
 
-      if (tokens + tokensAccumulator > 80000) {
-        tokensAccumulator = 0
-        currentArray++
-        filesPerTokens.push([])
+      if (file.name.endsWith('.md') || file.name === 'package.json') {
+        introductionFiles.push(file)
       }
 
-      tokensAccumulator = tokensAccumulator + tokens
-      filesPerTokens[currentArray].push(file)
+      if (chunkFiles.length === chunk) {
+        filesSplit.push(chunkFiles.slice())
+        chunkFiles = []
+      }
+
+      chunkFiles.push(file)
     }
 
-    return filesPerTokens.map((files) => {
+    if (chunkFiles.length > 0) filesSplit.push(chunkFiles.slice())
+
+    console.log(filesSplit.length)
+
+    const filesMain: string[] = filesSplit.map((files) => {
       return files.reduce((acc, file) => {
         return `${acc}\n\n File: ${file.name}\n Folder: ${file.path}\n ${file.content}`
       })
     })
+
+    const filesIntro: string = introductionFiles.reduce((acc, file) => {
+      return `${acc}\n\n File: ${file.name}\n Folder: ${file.path}\n ${file.content}`
+    })
+
+    const sendObject = {
+      filesIntro,
+      files: filesMain,
+      structure,
+    }
+
+    return sendObject
   }
 
   async deleteDocumentById(id: string, username: string) {
